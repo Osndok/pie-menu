@@ -1,0 +1,19 @@
+
+* table-width-optimizer
+** e.g. given(List, percent-wastable-area)
+** w/ FontMetrics?
+
+* PieMenu<T> component constructed w/ array or collection
+** PieMenuElement [maintains bounds & string-copy; enable/disable; affineTransformation]
+** getSelection
+** onHighlight [mouseover]
+** onActivate [mousedown]
+
+* draws inner circle
+* draws outer circle
+* draws wedges
+* auto-assigns fill/highlight colors (new class, sorta like ruler function)
+* draws labels
+* option to 'center' labels
+
+* 
