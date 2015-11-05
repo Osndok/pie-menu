@@ -212,8 +212,9 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 			final
 			PieMenuQuadrant quadrant;
 			{
-				quadrant = computeQuadrant(radiansPerWedge, i, lowAngle);
+				quadrant = computeQuadrant(lowAngle, highAngle);
 				pieMenuEntry.quadrant = quadrant;
+				log.debug("{} quadrant = {}; {} < {}", pieMenuEntry.label, quadrant, lowAngle, highAngle);
 			}
 
 			final
@@ -276,19 +277,13 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 				String label=pieMenuEntry.label;
 
 				final
-				int x=innerRadius+LABEL_PADDING;
-
-				final
-				int y=(centeredLabels ?-LABEL_PADDING/2:-LABEL_PADDING);
-
-				final
 				int w=fontMetrics.stringWidth(label);
 
 				final
 				int h=fontMetrics.getHeight();
 
-				final
-				Point2D transformed=affineTransform.transform(new Point2D.Double(x, y), null);
+				//final
+				//Point2D transformed=affineTransform.transform(new Point2D.Double(x, y), null);
 
 				g2.setColor(Color.BLACK);
 				g2.drawLine(innerRadius, 0, outerRadius, 0);
@@ -308,21 +303,36 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 					}
 				}
 
+				g2.setColor(pieMenuEntry.foregroundColor);
+
+				if (quadrant==PieMenuQuadrant.NORTH_EAST)
+				{
+					//The first & native transform... left-aligned text, anchored at the lower wedge border.
+					g2.drawString(debugLabel, innerRadius+LABEL_PADDING, -LABEL_PADDING);
+				}
+
 				if (quadrant==PieMenuQuadrant.SOUTH_EAST)
 				{
+					//The second transform is quite similar... left-aligned text, anchored at the upper wedge border.
+					//Offset the rotation & translation a bit, to make the words appear closer to the readable position
 					g2.transform(AffineTransform.getRotateInstance(-radiansPerWedge));
-					g2.transform(AffineTransform.getTranslateInstance(0, paddedLabelHeight));
+					//g2.transform(AffineTransform.getTranslateInstance(0, paddedLabelHeight));
+					g2.drawString(debugLabel, innerRadius+LABEL_PADDING, h+LABEL_PADDING);
 				}
-				/*
-				if (quadrant==PieMenuQuadrant.NORTH_WEST)
-				{
-					g2.transform(AffineTransform.getRotateInstance(Math.PI));
-				}
-				*/
 
-				log.debug("drawString('{}', {}+{}, {}+{}) -> {}", label, x, w, y, h, transformed);
-				g2.setColor(pieMenuEntry.foregroundColor);
-				g2.drawString(debugLabel, x, y);
+				if (quadrant==PieMenuQuadrant.SOUTH_WEST)
+				{
+					//g2.transform(AffineTransform.getRotateInstance(Math.PI));
+					//g2.drawString(debugLabel, -innerRadius-2*LABEL_PADDING-w, -LABEL_PADDING);
+				}
+
+				if (quadrant==PieMenuQuadrant.NORTH_EAST)
+				{
+					//g2.drawString(debugLabel, -innerRadius-2*LABEL_PADDING-w, -LABEL_PADDING);
+				}
+
+				//log.debug("drawString('{}', {}+{}, {}+{})", label, x, w, y, h);
+				//g2.drawString(debugLabel, innerRadius+LABEL_PADDING, -LABEL_PADDING);
 				//g2.drawRect(x, y, w, -h);
 			}
 			g2.setTransform(originalTransformation);
@@ -333,7 +343,10 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 		//Center hub
 		{
 			g2.setColor(Color.WHITE);
-			g2.fillArc(localCenterX - innerRadius, localCenterY - innerRadius, 2 * innerRadius, 2 * innerRadius, 0, 360);
+			g2.fillArc(localCenterX - innerRadius,
+						  localCenterY - innerRadius, 2 * innerRadius, 2 * innerRadius, 0, 360);
+			g2.setColor(Color.BLACK);
+			g2.drawArc(localCenterX - innerRadius, localCenterY - innerRadius, 2 * innerRadius, 2 * innerRadius, 0, 360);
 			g.setColor(Color.BLACK);
 			g2.drawString("X", localCenterX-(fontMetrics.charWidth('X')/2), localCenterY +(fontMetrics.getHeight()/2));
 		}
@@ -355,32 +368,34 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 	double PI_AND_A_HALF=Math.PI*1.5;
 
 	private
-	PieMenuQuadrant computeQuadrant(double radiansPerWedge, int i, double offsetAngle)
+	PieMenuQuadrant computeQuadrant(double lowAngle, double highAngle)
 	{
-		if (offsetAngle>TWO_PI)
-		{
-			throw new IllegalArgumentException("bad offsetAngle: "+offsetAngle);
-		}
+		if (lowAngle<0) lowAngle+=TWO_PI;
+		if (lowAngle>TWO_PI) lowAngle-=TWO_PI;
+		if (highAngle<0) highAngle+=TWO_PI;
+		if (highAngle>TWO_PI) highAngle-=TWO_PI;
 
-		if (offsetAngle<0)
-		{
-			offsetAngle+=TWO_PI;
-			assert(offsetAngle>0);
-		}
+		assert(lowAngle>=0);
+		assert(highAngle>=0);
+		assert(lowAngle<=TWO_PI);
+		assert(highAngle<=TWO_PI);
 
-		/*
-		ATM, the wedge is defined from offsetAngle to offsetAngle-radiansPerWedge (kinda... backwards).
-		Since a wedge can technically span more than one quadrant, we assign it to the quadrant that it's "median angle" is in.
-		 */
-		final
-		double median=offsetAngle-radiansPerWedge/2;
+		//TODO: if '0' or 'PI' is within the given range, use a special 'quadrant' (WEST or EAST).
 
-		if (median<HALF_PI)
+		if (lowAngle>highAngle)
 		{
 			return PieMenuQuadrant.NORTH_EAST;
 		}
 
-		if (median<Math.PI)
+		final
+		double median=(lowAngle+highAngle)/2;
+
+		if (median < HALF_PI)
+		{
+			return PieMenuQuadrant.NORTH_EAST;
+		}
+
+		if (median<=Math.PI)
 		{
 			return PieMenuQuadrant.NORTH_WEST;
 		}
@@ -465,6 +480,7 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 		PieMenuEntry retval = new PieMenuEntry();
 		{
 			retval.enabled = true;
+			retval.value=o;
 			retval.label = o.toString();
 			//Rectangle2D bounds;
 			//ListModel<?>    subMenuModel;
