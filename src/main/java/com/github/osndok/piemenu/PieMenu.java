@@ -181,7 +181,7 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 			final
 			int wedgeH=(int)(outerRadius*Math.sin(offsetAngle));
 
-			g2.drawLine(localCenterX, localCenterY, localCenterX+wedgeW, localCenterY+wedgeH);
+			//g2.drawLine(localCenterX, localCenterY, localCenterX+wedgeW, localCenterY+wedgeH);
 
 			final
 			AffineTransform originalTransformation=g2.getTransform();
@@ -231,9 +231,10 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 				final
 				Point2D transformed=affineTransform.transform(new Point2D.Double(x, y), null);
 
+				g2.drawLine(innerRadius, 0, outerRadius, 0);
 				log.debug("drawString('{}', {}+{}, {}+{}) -> {}", label, x, w, y, h, transformed);
 				g2.drawString(label, x, y);
-				g2.drawRect(x, y, w, -h);
+				//g2.drawRect(x, y, w, -h);
 			}
 			g2.setTransform(originalTransformation);
 
