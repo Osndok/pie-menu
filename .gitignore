@@ -1,1 +1,6 @@
 *~
+*.swp
+*.kate-swp
+/.idea
+*.iml
+/target
