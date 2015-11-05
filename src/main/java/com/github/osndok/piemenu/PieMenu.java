@@ -192,8 +192,12 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 			final
 			PieMenuEntry pieMenuEntry=entries[i];
 
+			/*
+			The offsetAngle is the principal "angle" of the wedge, as defined by its *greater* boundary leg.
+			Therefore, the angle might not seem intuitive.
+			 */
 			final
-			double offsetAngle=radiansPerWedge*i;
+			double offsetAngle=(radiansPerWedge*(i+1)-HALF_PI)%TWO_PI;
 			{
 				log.debug("offsetAngle={}", offsetAngle);
 			}
@@ -338,9 +342,15 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 	private
 	PieMenuQuadrant computeQuadrant(double radiansPerWedge, int i, double offsetAngle)
 	{
-		if (offsetAngle<0 || offsetAngle>TWO_PI)
+		if (offsetAngle>TWO_PI)
 		{
 			throw new IllegalArgumentException("bad offsetAngle: "+offsetAngle);
+		}
+
+		if (offsetAngle<0)
+		{
+			offsetAngle+=TWO_PI;
+			assert(offsetAngle>0);
 		}
 
 		/*
