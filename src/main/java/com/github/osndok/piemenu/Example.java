@@ -69,13 +69,13 @@ class Example extends JFrame implements Runnable, MouseListener
 					if (pieMenu.isVisible())
 					{
 						log.debug("invoked-later, pieMenu is visible");
-						pieMenu.setCenter(mouseEvent.getPoint());
+						pieMenu.setCenter(accountForInsets(mouseEvent.getPoint()));
 						repaint();
 					}
 					else
 					{
 						log.debug("invoked-later, pieMenu is IN-visible");
-						pieMenu.setCenter(mouseEvent.getPoint());
+						pieMenu.setCenter(accountForInsets(mouseEvent.getPoint()));
 						//pieMenu.setBorder(BorderFactory.createLineBorder(Color.RED));
 						pieMenu.setVisible(true);
 						repaint();
@@ -83,6 +83,24 @@ class Example extends JFrame implements Runnable, MouseListener
 				}
 			});
 		}
+	}
+
+	/**
+	 * TODO: there is probably a better (or more conventional) way to handle inset offsets, maybe in SwingUtilities?
+	 *
+	 * @param point
+	 * @return
+	 */
+	private
+	Point accountForInsets(Point point)
+	{
+		final
+		Insets insets=getInsets();
+		{
+			log.debug("insets: {}", insets);
+		}
+
+		return new Point(point.x-insets.left, point.y-insets.top);
 	}
 
 	private
@@ -97,6 +115,11 @@ class Example extends JFrame implements Runnable, MouseListener
 			list.add("Delta");
 			list.add(new Object());
 			list.add(this);
+			list.add("Zeta");
+			list.add("Theta");
+			list.add("Omega");
+			list.add("Omicron");
+			list.add("Enough?");
 		}
 
 		return list;

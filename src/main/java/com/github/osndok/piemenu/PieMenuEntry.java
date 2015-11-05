@@ -12,12 +12,14 @@ class PieMenuEntry<T>
 {
 	String          label;
 	T               value;
+	//AffineTransform affineTransform;
 	boolean         enabled;
-	AffineTransform affineTransform;
 	Rectangle2D     bounds;
 	ListModel<?>    subMenuModel;
 	PieMenuQuadrant quadrant;
 	Image           icon;
+
+	float           hue;
 	Color           foregroundColor;
 	Color           backgroundColor;
 }

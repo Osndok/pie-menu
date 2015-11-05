@@ -1,7 +1,29 @@
 
+? LabeledRunnable class?
+
 * table-width-optimizer
 ** e.g. given(List, percent-wastable-area)
 ** w/ FontMetrics?
+
+* draws inner circle
+* draws outer circle
+* draws basic wedges
+
+* draws labels
+
+* tracks parallel list entry (piemenuentries)... or map?
+* assign quadrants to each entry
+
+* auto-assigns fill/highlight colors (new class, sorta like ruler function)
+
+* produces colored wedges
+
+----------------------
+
+* more readable labels (fix all rotation)
+
+* addSubMenu(Object o, PieMenu)
+
 
 * PieMenu<T> component constructed w/ array or collection
 ** PieMenuElement [maintains bounds & string-copy; enable/disable; affineTransformation]
@@ -9,11 +31,4 @@
 ** onHighlight [mouseover]
 ** onActivate [mousedown]
 
-* draws inner circle
-* draws outer circle
-* draws wedges
-* auto-assigns fill/highlight colors (new class, sorta like ruler function)
-* draws labels
-* option to 'center' labels
-
-* 
+* check/fix option to 'center' labels
