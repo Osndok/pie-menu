@@ -235,10 +235,9 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 				shape = new Arc2D.Double(0, 0, getWidth(), getHeight(),
 												startDegrees, degreesPerWedge,
 												Arc2D.PIE);
-				{
-					g2.fill(shape);
-				}
 
+				g2.fill(shape);
+				pieMenuEntry.shape=shape;
 			}
 
 			// ------------- TRANSFORM BOUNDARY -----------------
@@ -247,32 +246,14 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 			AffineTransform originalTransformation=g2.getTransform();
 
 			final
-			AffineTransform affineTransform=new AffineTransform();
+			AffineTransform locallyCentered=new AffineTransform();
 			{
-				//affineTransform.setToRotation(offsetAngle);
-				//affineTransform.translate(-innerRadius, -innerRadius);
-				//affineTransform.setToRotation(offsetAngle);
-				affineTransform.concatenate(originalTransformation);
-				//affineTransform.setToRotation(offsetAngle);
-				//affineTransform.concatenate(toCenter);
-				//affineTransform.setToRotation(offsetAngle);
-				affineTransform.translate(localCenterX, localCenterY);
-				//affineTransform.setToRotation(offsetAngle);
-				//affineTransform.translate(innerRadius, 0);
-				//affineTransform.setToRotation(offsetAngle);
+				locallyCentered.concatenate(originalTransformation);
+				locallyCentered.translate(localCenterX, localCenterY);
 			}
 
-			g2.setTransform(affineTransform);
+			g2.setTransform(locallyCentered);
 			{
-				if (centeredLabels)
-				{
-					g2.transform(AffineTransform.getRotateInstance(-lowAngle + radiansPerWedge / 2));
-				}
-				else
-				{
-					g2.transform(AffineTransform.getRotateInstance(-lowAngle));
-				}
-
 				final
 				String label=pieMenuEntry.label;
 
@@ -282,11 +263,9 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 				final
 				int h=fontMetrics.getHeight();
 
-				//final
-				//Point2D transformed=affineTransform.transform(new Point2D.Double(x, y), null);
-
-				g2.setColor(Color.BLACK);
-				g2.drawLine(innerRadius, 0, outerRadius, 0);
+				//USED TO draw black lines between the wedges, now does not work (affineTransformation moved).
+				//g2.setColor(Color.BLACK);
+				//g2.drawLine(innerRadius, 0, outerRadius, 0);
 
 				final
 				String debugLabel;
@@ -305,9 +284,22 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 
 				g2.setColor(pieMenuEntry.foregroundColor);
 
+				if (quadrant == PieMenuQuadrant.EAST)
+				{
+					//Left-centered label, no rotation, against the inner radius.
+					g2.drawString(debugLabel, innerRadius+LABEL_PADDING, 0);
+				}
+
+				if (quadrant == PieMenuQuadrant.WEST)
+				{
+					//Right-centered label, no rotation, against the outer/left radius.
+					g2.drawString(debugLabel, -outerRadius, 0);
+				}
+
 				if (quadrant==PieMenuQuadrant.NORTH_EAST)
 				{
 					//The first & native transform... left-aligned text, anchored at the lower wedge border.
+					g2.transform(AffineTransform.getRotateInstance(-lowAngle));
 					g2.drawString(debugLabel, innerRadius+LABEL_PADDING, -LABEL_PADDING);
 				}
 
@@ -315,7 +307,7 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 				{
 					//The second transform is quite similar... left-aligned text, anchored at the upper wedge border.
 					//Offset the rotation & translation a bit, to make the words appear closer to the readable position
-					g2.transform(AffineTransform.getRotateInstance(-radiansPerWedge));
+					g2.transform(AffineTransform.getRotateInstance(-lowAngle-radiansPerWedge));
 					//g2.transform(AffineTransform.getTranslateInstance(0, paddedLabelHeight));
 					g2.drawString(debugLabel, innerRadius+LABEL_PADDING, h+LABEL_PADDING);
 				}
@@ -326,7 +318,7 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 					//g2.drawString(debugLabel, -innerRadius-2*LABEL_PADDING-w, -LABEL_PADDING);
 				}
 
-				if (quadrant==PieMenuQuadrant.NORTH_EAST)
+				if (quadrant==PieMenuQuadrant.NORTH_WEST)
 				{
 					//g2.drawString(debugLabel, -innerRadius-2*LABEL_PADDING-w, -LABEL_PADDING);
 				}
@@ -384,7 +376,7 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 
 		if (lowAngle>highAngle)
 		{
-			return PieMenuQuadrant.NORTH_EAST;
+			return PieMenuQuadrant.EAST;
 		}
 
 		final
@@ -393,6 +385,11 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 		if (median < HALF_PI)
 		{
 			return PieMenuQuadrant.NORTH_EAST;
+		}
+
+		if (lowAngle < Math.PI && Math.PI < highAngle)
+		{
+			return PieMenuQuadrant.WEST;
 		}
 
 		if (median<=Math.PI)

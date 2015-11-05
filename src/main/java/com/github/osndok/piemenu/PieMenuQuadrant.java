@@ -6,6 +6,8 @@ package com.github.osndok.piemenu;
 public
 enum PieMenuQuadrant
 {
+	WEST,
+	EAST,
 	NORTH_EAST,
 	SOUTH_EAST,
 	SOUTH_WEST,
