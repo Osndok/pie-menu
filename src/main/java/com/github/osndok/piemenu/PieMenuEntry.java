@@ -17,6 +17,7 @@ class PieMenuEntry<T>
 	Rectangle2D     bounds;
 	ListModel<?>    subMenuModel;
 	PieMenuQuadrant quadrant;
+	Image           icon;
 	Color           foregroundColor;
 	Color           backgroundColor;
 }

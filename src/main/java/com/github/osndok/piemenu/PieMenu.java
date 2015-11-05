@@ -24,6 +24,9 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 	Logger log = LoggerFactory.getLogger(PieMenu.class);
 
 	private static final
+	boolean CENTERED_LABELS=false;
+
+	private static final
 	int LABEL_PADDING = 5;
 
 	private
@@ -72,10 +75,6 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 		final
 		FontMetrics fontMetrics = g.getFontMetrics();
 
-		//NB: assumes single-ring pie menu, for now.
-		final
-		double radiansPerEntry=2*Math.PI/labels.size();
-
 		final
 		int paddedLabelHeight=2*LABEL_PADDING+fontMetrics.getHeight();
 
@@ -83,10 +82,13 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 		int innerRadius;
 		{
 			final
+			double pedanticRadiansPerWedge=2*Math.PI/labels.size();
+
+			final
 			int grabbableTargetBound = 40;
 
 			final
-			int labelBound = (int) (paddedLabelHeight / Math.tan(radiansPerEntry));
+			int labelBound = (int) (paddedLabelHeight / Math.tan(pedanticRadiansPerWedge));
 
 			innerRadius=Math.max(grabbableTargetBound, labelBound);
 		}
@@ -143,9 +145,21 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 			g2.draw(shape);
 		}
 
-		//NB: Assumes single-ring
 		final
-		double radiansPerWedge=2*Math.PI/numLabels;
+		double radiansPerWedge;
+		{
+			radiansPerWedge=Math.min(45.0, 2*Math.PI/numLabels);
+
+			final
+			int estimatedWedgeH=(int)(outerRadius*Math.sin(radiansPerWedge));
+
+			log.debug("estimatedWedgeHeight = {}px @ {} rad", estimatedWedgeH, radiansPerWedge);
+
+			if (estimatedWedgeH<paddedLabelHeight)
+			{
+				throw new UnsupportedOperationException("unimplemented; too many items for a single ring, need to implement outer ring logic.");
+			}
+		}
 
 		final
 		AffineTransform toCenter=new AffineTransform();
@@ -175,22 +189,38 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 			final
 			AffineTransform affineTransform=new AffineTransform();
 			{
+				//affineTransform.setToRotation(offsetAngle);
 				//affineTransform.translate(-innerRadius, -innerRadius);
-				affineTransform.setToRotation(offsetAngle);
+				//affineTransform.setToRotation(offsetAngle);
 				affineTransform.concatenate(originalTransformation);
+				//affineTransform.setToRotation(offsetAngle);
 				//affineTransform.concatenate(toCenter);
+				//affineTransform.setToRotation(offsetAngle);
+				affineTransform.translate(localCenterX, localCenterY);
+				//affineTransform.setToRotation(offsetAngle);
+				//affineTransform.translate(innerRadius, 0);
+				//affineTransform.setToRotation(offsetAngle);
 			}
 
 			g2.setTransform(affineTransform);
 			{
+				if (CENTERED_LABELS)
+				{
+					g2.transform(AffineTransform.getRotateInstance(offsetAngle + radiansPerWedge / 2));
+				}
+				else
+				{
+					g2.transform(AffineTransform.getRotateInstance(offsetAngle));
+				}
+
 				final
 				String label=labels.get(i);
 
 				final
-				int x=localCenterX+innerRadius+LABEL_PADDING;
+				int x=innerRadius+LABEL_PADDING;
 
 				final
-				int y=localCenterY-LABEL_PADDING;
+				int y=(CENTERED_LABELS?-LABEL_PADDING/2:-LABEL_PADDING);
 
 				final
 				int w=fontMetrics.stringWidth(label);
