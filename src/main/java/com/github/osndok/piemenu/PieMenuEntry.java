@@ -12,7 +12,9 @@ class PieMenuEntry<T>
 {
 	String          label;
 	T               value;
-	//AffineTransform affineTransform;
+
+	Shape           shape;
+
 	boolean         enabled;
 	Rectangle2D     bounds;
 	ListModel<?>    subMenuModel;

@@ -140,12 +140,12 @@ class Example extends JFrame implements Runnable, MouseListener
 	public
 	void mouseEntered(MouseEvent mouseEvent)
 	{
-		log.debug("mouseEntered({})", mouseEvent);
+		log.trace("mouseEntered({})", mouseEvent);
 	}
 
 	public
 	void mouseExited(MouseEvent mouseEvent)
 	{
-		log.debug("mouseExited({})", mouseEvent);
+		log.trace("mouseExited({})", mouseEvent);
 	}
 }

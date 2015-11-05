@@ -166,9 +166,13 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 		}
 
 		final
+		double degreesPerWedge;
+
+		final
 		double radiansPerWedge;
 		{
 			radiansPerWedge=Math.min(45.0, 2*Math.PI/numEntries);
+			degreesPerWedge=Math.toDegrees(radiansPerWedge);
 
 			final
 			int estimatedWedgeH=(int)(outerRadius*Math.sin(radiansPerWedge));
@@ -193,29 +197,50 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 			PieMenuEntry pieMenuEntry=entries[i];
 
 			/*
-			The offsetAngle is the principal "angle" of the wedge, as defined by its *greater* boundary leg.
-			Therefore, the angle might not seem intuitive.
+			The offsetAngle is the principal "angle" of the wedge, as defined by its "lower" boundary leg.
+			Zero radians & zero degrees should point "right".
 			 */
 			final
-			double offsetAngle=(radiansPerWedge*(i+1)-HALF_PI)%TWO_PI;
+			double highAngle=(HALF_PI-radiansPerWedge*(i))%TWO_PI;
+
+			final
+			double lowAngle=(HALF_PI-radiansPerWedge*(i+1))%TWO_PI;
 			{
-				log.debug("offsetAngle={}", offsetAngle);
+				log.debug("{} < angle < {}", lowAngle, highAngle);
 			}
 
 			final
 			PieMenuQuadrant quadrant;
 			{
-				quadrant = computeQuadrant(radiansPerWedge, i, offsetAngle);
+				quadrant = computeQuadrant(radiansPerWedge, i, lowAngle);
 				pieMenuEntry.quadrant = quadrant;
 			}
 
 			final
-			int wedgeW =(int)(outerRadius*Math.cos(offsetAngle));
+			int wedgeW =(int)(outerRadius*Math.cos(lowAngle));
 
 			final
-			int wedgeH=(int)(outerRadius*Math.sin(offsetAngle));
+			int wedgeH=(int)(outerRadius*Math.sin(lowAngle));
 
-			//g2.drawLine(localCenterX, localCenterY, localCenterX+wedgeW, localCenterY+wedgeH);
+			//Primary/large colored "wedge"
+			//if (i==1)
+			{
+				g2.setColor(pieMenuEntry.backgroundColor);
+
+				//TODO: Why are these angles so far off from what I would expect?
+				double startDegrees=Math.toDegrees(lowAngle);
+
+				log.debug("drawing '{}' arc, {} rad -> {} degrees", pieMenuEntry.label, lowAngle, startDegrees);
+				shape = new Arc2D.Double(0, 0, getWidth(), getHeight(),
+												startDegrees, degreesPerWedge,
+												Arc2D.PIE);
+				{
+					g2.fill(shape);
+				}
+
+			}
+
+			// ------------- TRANSFORM BOUNDARY -----------------
 
 			final
 			AffineTransform originalTransformation=g2.getTransform();
@@ -240,11 +265,11 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 			{
 				if (centeredLabels)
 				{
-					g2.transform(AffineTransform.getRotateInstance(offsetAngle + radiansPerWedge / 2));
+					g2.transform(AffineTransform.getRotateInstance(-lowAngle + radiansPerWedge / 2));
 				}
 				else
 				{
-					g2.transform(AffineTransform.getRotateInstance(offsetAngle));
+					g2.transform(AffineTransform.getRotateInstance(-lowAngle));
 				}
 
 				final
@@ -264,16 +289,6 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 
 				final
 				Point2D transformed=affineTransform.transform(new Point2D.Double(x, y), null);
-
-				g2.setColor(pieMenuEntry.backgroundColor);
-
-				//Main colored 'wedge'.
-				//TODO: It might be better if we could color the pie without having to overwrite the center "hub"... e.g. for transparency.
-				shape=new Arc2D.Double(-outerRadius,-outerRadius,2*outerRadius,2*outerRadius,0,Math.toDegrees(radiansPerWedge), Arc2D.PIE);
-				{
-					g2.fill(shape);
-				}
-				//g2.fillArc(-outerRadius, -outerRadius, 2*outerRadius, 2*outerRadius, 0, (int)Math.toDegrees(radiansPerWedge));
 
 				g2.setColor(Color.BLACK);
 				g2.drawLine(innerRadius, 0, outerRadius, 0);
@@ -320,7 +335,7 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 			g2.setColor(Color.WHITE);
 			g2.fillArc(localCenterX - innerRadius, localCenterY - innerRadius, 2 * innerRadius, 2 * innerRadius, 0, 360);
 			g.setColor(Color.BLACK);
-			g2.drawString("X", localCenterX-(fontMetrics.charWidth('X')/2), localCenterY+(fontMetrics.getHeight()/2));
+			g2.drawString("X", localCenterX-(fontMetrics.charWidth('X')/2), localCenterY +(fontMetrics.getHeight()/2));
 		}
 
 		paintBorder(g);
@@ -360,27 +375,22 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 		final
 		double median=offsetAngle-radiansPerWedge/2;
 
-		if (median <= TRIVIAL_RADIAN_ANGLE)
+		if (median<HALF_PI)
 		{
 			return PieMenuQuadrant.NORTH_EAST;
 		}
 
-		if (median<HALF_PI)
-		{
-			return PieMenuQuadrant.SOUTH_EAST;
-		}
-
 		if (median<Math.PI)
-		{
-			return PieMenuQuadrant.SOUTH_WEST;
-		}
-
-		if (median<PI_AND_A_HALF)
 		{
 			return PieMenuQuadrant.NORTH_WEST;
 		}
 
-		return PieMenuQuadrant.NORTH_EAST;
+		if (median<PI_AND_A_HALF)
+		{
+			return PieMenuQuadrant.SOUTH_WEST;
+		}
+
+		return PieMenuQuadrant.SOUTH_EAST;
 	}
 
 	private
