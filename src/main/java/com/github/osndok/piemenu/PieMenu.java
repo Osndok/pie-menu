@@ -2,6 +2,7 @@ package com.github.osndok.piemenu;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.css.Rect;
 
 import javax.swing.*;
 import java.awt.*;
@@ -67,11 +68,6 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 	public
 	void paint(Graphics g)
 	{
-		if (DEBUG)
-		{
-			g.setClip(null);
-		}
-
 		final
 		Point globalCenter;
 		{
@@ -290,12 +286,15 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 				if (quadrant == PieMenuQuadrant.EAST)
 				{
 					//Left-centered label, no rotation, against the inner radius.
+					g2.setClip(new Rectangle2D.Double(innerRadius+LABEL_PADDING, 0-paddedLabelHeight+LABEL_PADDING, allocatedLabelWidth, paddedLabelHeight));
 					g2.drawString(debugLabel, innerRadius+LABEL_PADDING, 0);
 				}
 
 				if (quadrant == PieMenuQuadrant.WEST)
 				{
 					//Right-centered label, no rotation, against the outer/left radius.
+					//g2.setClip(new Rectangle2D.Double(LABEL_PADDING-outerRadius, LABEL_PADDING-outerRadius-paddedLabelHeight+LABEL_PADDING, allocatedLabelWidth, paddedLabelHeight));
+					g2.setClip(new Rectangle2D.Double(LABEL_PADDING-outerRadius, 0-paddedLabelHeight+LABEL_PADDING, allocatedLabelWidth, paddedLabelHeight));
 					g2.drawString(debugLabel, LABEL_PADDING-outerRadius, 0);
 				}
 
@@ -303,6 +302,9 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 				{
 					//The first & native transform... left-aligned text, anchored at the lower wedge border.
 					g2.transform(AffineTransform.getRotateInstance(-lowAngle));
+					g2.setClip(new Rectangle2D.Double(innerRadius + LABEL_PADDING,
+														 -LABEL_PADDING - paddedLabelHeight + LABEL_PADDING,
+														 allocatedLabelWidth, paddedLabelHeight));
 					g2.drawString(debugLabel, innerRadius+LABEL_PADDING, -LABEL_PADDING);
 				}
 
@@ -311,25 +313,32 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 					//The second transform is quite similar... left-aligned text, anchored at the upper wedge border.
 					//Offset the rotation & translation a bit, to make the words appear closer to the readable position
 					g2.transform(AffineTransform.getRotateInstance(-highAngle));
-					//g2.transform(AffineTransform.getTranslateInstance(0, paddedLabelHeight));
+					g2.setClip(new Rectangle2D.Double(innerRadius+LABEL_PADDING, h+LABEL_PADDING-paddedLabelHeight+LABEL_PADDING, allocatedLabelWidth, paddedLabelHeight));
 					g2.drawString(debugLabel, innerRadius+LABEL_PADDING, h+LABEL_PADDING);
 				}
 
 				if (quadrant==PieMenuQuadrant.SOUTH_WEST)
 				{
 					g2.transform(AffineTransform.getRotateInstance(Math.PI-lowAngle));
+					g2.setClip(new Rectangle2D.Double(LABEL_PADDING-outerRadius,
+														 paddedLabelHeight - LABEL_PADDING - paddedLabelHeight + LABEL_PADDING,
+														 allocatedLabelWidth, paddedLabelHeight));
 					g2.drawString(debugLabel, LABEL_PADDING - outerRadius, paddedLabelHeight-LABEL_PADDING);
 				}
 
 				if (quadrant==PieMenuQuadrant.NORTH_WEST)
 				{
 					g2.transform(AffineTransform.getRotateInstance(Math.PI-highAngle));
+					g2.setClip(new Rectangle2D.Double(LABEL_PADDING-outerRadius,
+														 -LABEL_PADDING - paddedLabelHeight + LABEL_PADDING,
+														 allocatedLabelWidth, paddedLabelHeight));
 					g2.drawString(debugLabel, LABEL_PADDING-outerRadius, -LABEL_PADDING);
 				}
 
 				//log.debug("drawString('{}', {}+{}, {}+{})", label, x, w, y, h);
 				//g2.drawString(debugLabel, innerRadius+LABEL_PADDING, -LABEL_PADDING);
 				//g2.drawRect(x, y, w, -h);
+				g2.setClip(originalClipRegion);
 			}
 			g2.setTransform(originalTransformation);
 
