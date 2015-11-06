@@ -32,3 +32,5 @@
 ** onActivate [mousedown]
 
 * check/fix option to 'center' labels
+
+* bug: 12-item wheel shows EAST label out of position

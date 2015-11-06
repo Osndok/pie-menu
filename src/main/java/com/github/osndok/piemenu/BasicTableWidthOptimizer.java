@@ -19,10 +19,10 @@ import java.util.Iterator;
 class BasicTableWidthOptimizer
 {
 	/**
-	 * Roughly translates to: "how much empty space is tolerated?"
+	 * Roughly translates to: "how much empty space is tolerated?" (e.g. between the text & hub or text and edge)
 	 */
 	private static final
-	int PERCENT_ALLOWABLE_INFLATION = 10;
+	int PERCENT_ALLOWABLE_INFLATION = 25;
 
 	private static final
 	Logger log = LoggerFactory.getLogger(BasicTableWidthOptimizer.class);

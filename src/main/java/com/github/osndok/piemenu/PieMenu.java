@@ -285,16 +285,16 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 				if (quadrant == PieMenuQuadrant.EAST)
 				{
 					//Left-centered label, no rotation, against the inner radius.
-					g2.setClip(new Rectangle2D.Double(innerRadius+LABEL_PADDING, 0-paddedLabelHeight+LABEL_PADDING, allocatedLabelWidth, paddedLabelHeight));
-					g2.drawString(debugLabel, innerRadius+LABEL_PADDING, 0);
+					g2.setClip(new Rectangle2D.Double(innerRadius+LABEL_PADDING, LABEL_PADDING-paddedLabelHeight+LABEL_PADDING, allocatedLabelWidth, paddedLabelHeight));
+					g2.drawString(debugLabel, innerRadius+LABEL_PADDING, LABEL_PADDING);
 				}
 
 				if (quadrant == PieMenuQuadrant.WEST)
 				{
 					//Right-centered label, no rotation, against the outer/left radius.
 					//g2.setClip(new Rectangle2D.Double(LABEL_PADDING-outerRadius, LABEL_PADDING-outerRadius-paddedLabelHeight+LABEL_PADDING, allocatedLabelWidth, paddedLabelHeight));
-					g2.setClip(new Rectangle2D.Double(LABEL_PADDING-outerRadius, 0-paddedLabelHeight+LABEL_PADDING, allocatedLabelWidth, paddedLabelHeight));
-					g2.drawString(debugLabel, LABEL_PADDING-outerRadius, 0);
+					g2.setClip(new Rectangle2D.Double(LABEL_PADDING-outerRadius, LABEL_PADDING-paddedLabelHeight+LABEL_PADDING, allocatedLabelWidth, paddedLabelHeight));
+					g2.drawString(debugLabel, LABEL_PADDING-outerRadius, LABEL_PADDING);
 				}
 
 				if (quadrant==PieMenuQuadrant.NORTH_EAST)
@@ -452,12 +452,33 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 	float lastWedgeHue = 0.0f;
 
 	/**
-	 * It is good for this to be prime-ish (or not a divisor of 10/100/1000), so that if it wraps we will
-	 * get 'new' and 'different' numbers. Also, it should be around 0.5 to get the maximum color difference
-	 * for neighboring wedges, or near-zero to get a gradient effect.
+	 * It is good for this to be prime-ish (or 1/P ?), so that if it wraps we will get 'new' and 'different' numbers.
+	 * Also, it should be around 0.5 to get the maximum color difference for neighboring wedges, or near-zero to get
+	 * a gradient effect.
+	 *
+	 * The formula seems to be related to "0.5-n/k", don't know what n & k are...
+	 *
+	 * Benchmarks:
+	 * 0.500 means "every other color is the same" (like a roulette wheel)
+	 * 0.433 [avg(0.500,0.366)] - wheel of 8 have one 'similar color pairs touching
+	 * 0.409 (0.5-1/11) - 6 & 11 look similar
+	 * 0.371 was the first mostly-successful value found, somewhat arbitrarily
+	 * --
+	 * 0.366 (i.e. 0.500-0.133) - visually seems to be the best of the benchmarks... a wheel of 9 (or 12?) will have one 'similar' color pair touching.
+	 * --
+	 * 0.357 (0.5-1/7) - 15-color wheel will have two similar touching
+	 * 0.355 - 15-element wheel has similar values touching
+	 * 0.349 [avg(0.366,0.333)] has a good drift... but every 3rd color is... 'related'...
+	 * 0.333 means "repeating pattern of three" (not much better)
+	 * 0.267 (which is 0.500-0.333) yields good results, with "about four colors" that drift apart
+	 * 0.250 means "repeating pattern of four" (does not give the impression of a gradient)
+	 * ????? "looks like a gradient" boundary
+	 * 0.133 (half of 0.267) related pattern of "about-8" that drift, gradient-ish
+	 * 0.125 would be a pattern of 8 (gradient-ish)
+	 * 0.063 would be a pattern of 16 (very color-wheel-ish)
 	 */
 	private static final
-	float WEDGE_HUE_SEPARATION = 0.371f; //0.123f;
+	float WEDGE_HUE_SEPARATION = 0.366f;
 
 	private static final
 	float WEDGE_BACKGROUND_SATURATION = 0.3f;

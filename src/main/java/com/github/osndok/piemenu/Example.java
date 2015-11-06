@@ -23,6 +23,8 @@ class Example extends JFrame implements Runnable, MouseListener
 	public
 	Example()
 	{
+		super("Java Swing Pie-Menu Demo");
+
 		setSize(1024, 1024);
 		//setLayout(new FlowLayout(FlowLayout.CENTER));
 		setLayout(null);
@@ -109,6 +111,12 @@ class Example extends JFrame implements Runnable, MouseListener
 		final
 		List list=new ArrayList();
 		{
+			/*
+			for (int i=1; i<13; i++)
+			{
+				list.add("Item #"+i);
+			}
+			/ */
 			list.add("Alpha");
 			list.add("Beta");
 			list.add("Gamma");
@@ -120,6 +128,7 @@ class Example extends JFrame implements Runnable, MouseListener
 			list.add("Omega");
 			list.add("Omicron");
 			list.add("Enough?");
+			//*/
 		}
 
 		return list;
