@@ -1,0 +1,27 @@
+h1. Java Swing Pie Menus
+
+This project is currently INCOMPLETE or UNUSABLE... but getting pretty close!
+
+It's motivation comes from seeing so many various 'proof-of-concept' pie menus that either (1) greatly favor asethetics over functionality, or (2) don't actually have the hooks that would be required to (in fact) *use* them when building another application... which makes them little more than toys.
+
+Therefore, this project is an attempt to create a mostly-compliant swing component (i.e. that behaves as a GUI designer would expect) that might be a "drop in replacement" or an "easy add" for contextual menus.
+
+!doc/pie-menu-screenshot-n1.png!
+
+
+h2. Lacking features that prevent usability
+
+* investigate/transition PieMenu's base class from JList to JPopupMenu
+** early experiment shows it might be hard to override the UI to that degree
+** investigate/transition PieMenuEntry's base class to JMenuItem
+
+* Upon moving a mouse over a wedge
+** highlight that wedge somehow
+** store the selected state (ala JList/JPopupMenu, fire triggers, etc)
+
+* Upon moving a mouse over the center hub
+** deselect currently-selected wedge
+** make JList/JPopupMenu selection null
+
+* Support 'seperators'
+
