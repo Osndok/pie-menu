@@ -282,6 +282,9 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 					}
 				}
 
+				final
+				Shape originalClipRegion = g2.getClip();
+
 				g2.setColor(pieMenuEntry.foregroundColor);
 
 				if (quadrant == PieMenuQuadrant.EAST)
@@ -293,7 +296,7 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 				if (quadrant == PieMenuQuadrant.WEST)
 				{
 					//Right-centered label, no rotation, against the outer/left radius.
-					g2.drawString(debugLabel, -outerRadius, 0);
+					g2.drawString(debugLabel, LABEL_PADDING-outerRadius, 0);
 				}
 
 				if (quadrant==PieMenuQuadrant.NORTH_EAST)
@@ -307,20 +310,21 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 				{
 					//The second transform is quite similar... left-aligned text, anchored at the upper wedge border.
 					//Offset the rotation & translation a bit, to make the words appear closer to the readable position
-					g2.transform(AffineTransform.getRotateInstance(-lowAngle-radiansPerWedge));
+					g2.transform(AffineTransform.getRotateInstance(-highAngle));
 					//g2.transform(AffineTransform.getTranslateInstance(0, paddedLabelHeight));
 					g2.drawString(debugLabel, innerRadius+LABEL_PADDING, h+LABEL_PADDING);
 				}
 
 				if (quadrant==PieMenuQuadrant.SOUTH_WEST)
 				{
-					//g2.transform(AffineTransform.getRotateInstance(Math.PI));
-					//g2.drawString(debugLabel, -innerRadius-2*LABEL_PADDING-w, -LABEL_PADDING);
+					g2.transform(AffineTransform.getRotateInstance(Math.PI-lowAngle));
+					g2.drawString(debugLabel, LABEL_PADDING - outerRadius, paddedLabelHeight-LABEL_PADDING);
 				}
 
 				if (quadrant==PieMenuQuadrant.NORTH_WEST)
 				{
-					//g2.drawString(debugLabel, -innerRadius-2*LABEL_PADDING-w, -LABEL_PADDING);
+					g2.transform(AffineTransform.getRotateInstance(Math.PI-highAngle));
+					g2.drawString(debugLabel, LABEL_PADDING-outerRadius, -LABEL_PADDING);
 				}
 
 				//log.debug("drawString('{}', {}+{}, {}+{})", label, x, w, y, h);
