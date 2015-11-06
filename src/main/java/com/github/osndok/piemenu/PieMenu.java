@@ -2,8 +2,8 @@ package com.github.osndok.piemenu;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.css.Rect;
 
+import javax.module.util.SystemPropertyOrEnvironment;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -12,7 +12,6 @@ import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Ellipse2D;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
@@ -347,7 +346,7 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 
 		//Center hub
 		{
-			g2.setColor(Color.WHITE);
+			g2.setColor(getBackground());
 			g2.fillArc(localCenterX - innerRadius,
 						  localCenterY - innerRadius, 2 * innerRadius, 2 * innerRadius, 0, 360);
 			g2.setColor(Color.BLACK);
@@ -359,9 +358,6 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 		paintBorder(g);
 		paintChildren(g);
 	}
-
-	private static final
-	double TRIVIAL_RADIAN_ANGLE=2*Math.PI/360;
 
 	private static final
 	double TWO_PI=2*Math.PI;
@@ -473,16 +469,65 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 	float WEDGE_TEXT_SATURATION = 1.0f;
 
 	private static final
-	float WEDGE_TEXT_BRIGHTNESS = 0.4f;
+	float WEDGE_TEXT_BRIGHTNESS = 0.3f;
 
+	//TODO: if object isa PieMenuEntry, then use it directly, filling in any missing details, and updating any state (like lastWedgeHue).
 	private
 	PieMenuEntry createPieMenuEntry(Object o)
 	{
 		final
+		String label;
+		{
+			label=o.toString();
+		}
+
+		final
 		float hue;
 		{
-			//Skipping around the color wheel...
-			hue=(lastWedgeHue+WEDGE_HUE_SEPARATION)%1.0f;
+			switch (colorizer)
+			{
+				case DISTINCT_HUES:
+				{
+					//Skipping around the color wheel...
+					hue=(lastWedgeHue+WEDGE_HUE_SEPARATION)%1.0f;
+					break;
+				}
+
+				case GRADIENT:
+				{
+					//Walking around the color wheel...
+					final
+					float partial=(1.0f/listModel.getSize());
+
+					hue=(lastWedgeHue+partial)%1.0f;
+					break;
+				}
+
+				case LABEL_HASH:
+				{
+					//Stateless... does not depend on any other wedge color...
+					final
+					double hash=label.toLowerCase().hashCode();
+
+					final
+					double exponent=Math.ceil(Math.log10(hash));
+
+					final
+					double magnitude=Math.pow(10, exponent);
+
+					hue=(float)Math.abs(hash/magnitude);
+
+					log.debug("hash-color: '{}' -> {} -> {} -> {} -> {}", label, hash, exponent, magnitude, hue);
+
+					break;
+				}
+
+				default:
+				{
+					throw new AssertionError();
+				}
+			}
+
 			lastWedgeHue=hue;
 		}
 
@@ -491,7 +536,7 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 		{
 			retval.enabled = true;
 			retval.value=o;
-			retval.label = o.toString();
+			retval.label = label;
 			//Rectangle2D bounds;
 			//ListModel<?>    subMenuModel;
 			//later: PieMenuQuadrant quadrant;
@@ -591,5 +636,46 @@ class PieMenu<T> extends JList<T> implements MouseMotionListener, MouseListener
 	void setCenteredLabels(boolean centeredLabels)
 	{
 		this.centeredLabels = centeredLabels;
+	}
+
+	private
+	Colorizer colorizer=getDefaultColorizer();
+
+	private static
+	Colorizer getDefaultColorizer()
+	{
+		final
+		String preference=SystemPropertyOrEnvironment.get("PIE_MENU_COLORIZER");
+
+		if (preference!=null)
+		{
+			try
+			{
+				return Colorizer.valueOf(preference);
+			}
+			catch (Exception e)
+			{
+				log.error("invalid PIE_MENU_COLORIZER: '{}'", preference, e);
+			}
+		}
+
+		return Colorizer.DISTINCT_HUES;
+	}
+
+	public
+	Colorizer getColorizer()
+	{
+		return colorizer;
+	}
+
+	public
+	void setColorizer(Colorizer colorizer)
+	{
+		if (colorizer==null)
+		{
+			throw new NullPointerException();
+		}
+
+		this.colorizer = colorizer;
 	}
 }
